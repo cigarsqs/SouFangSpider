@@ -1,0 +1,64 @@
+CREATE SCHEMA `test` ;
+
+ALTER SCHEMA `test`  DEFAULT CHARACTER SET utf8 ;
+
+CREATE TABLE `test`.`SFS_region_info` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `region_url` VARCHAR(45) NOT NULL,
+  `region_name` VARCHAR(45) NOT NULL,
+  `parent_row_id` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC));
+
+
+
+CREATE TABLE `test`.`SFS_land_info` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `land_url` VARCHAR(45) NULL,
+  `land_province` VARCHAR(45) NULL,
+  `land_city` VARCHAR(45) NULL,
+  `land_construction_area` VARCHAR(45) NULL,
+  `land_total_area` VARCHAR(45) NULL,
+  `land_planned_area` VARCHAR(45) NULL,
+  `land_transfer_form` VARCHAR(45) NULL,
+  `land_transfer_period` VARCHAR(45) NULL,
+  `land_position` VARCHAR(45) NULL,
+  `land_four_to` VARCHAR(45) NULL,
+  `land_planning_use` VARCHAR(45) NULL,
+  `parent_row_id` VARCHAR(45) NULL,
+  `land_confiscated_area` VARCHAR(45) NULL,
+  `land_plot_ratio` VARCHAR(45) NULL,
+  `land_greening_rate` VARCHAR(45) NULL,
+  `commercial_scale` VARCHAR(45) NULL,
+  `land_building_density` VARCHAR(45) NULL,
+  `land_limited_height` VARCHAR(45) NULL,
+  `land_number` VARCHAR(45) NULL,
+  `last_modified_date` DATETIME NULL,
+  PRIMARY KEY (`id`));
+
+
+ALTER TABLE `test`.`SFS_land_info`
+CHANGE COLUMN `land_url` `land_url` VARCHAR(120) NULL DEFAULT NULL ;
+
+
+CREATE TABLE `SFS_trade_info` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `trade_status` varchar(45) DEFAULT NULL,
+  `trade_winner` varchar(45) DEFAULT NULL,
+  `trade_start_date` date DEFAULT NULL,
+  `trade_due_date` date DEFAULT NULL,
+  `trade_deal_date` date DEFAULT NULL,
+  `trade_place` varchar(45) DEFAULT NULL,
+  `trade_starting_price` varchar(45) DEFAULT NULL,
+  `trade_strike_price` varchar(45) DEFAULT NULL,
+  `land_price` varchar(45) DEFAULT NULL,
+  `premium_rate` varchar(45) DEFAULT NULL,
+  `land_announcement` varchar(45) DEFAULT NULL,
+  `consulting_telephone` varchar(45) DEFAULT NULL,
+  ` security_deposit` varchar(45) DEFAULT NULL,
+  `minimum_markup` varchar(45) DEFAULT NULL,
+  `land_url` varchar(120) DEFAULT NULL,
+  `last_modified_date` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+

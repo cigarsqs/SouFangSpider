@@ -1,9 +1,14 @@
 # coding=utf-8
+import sys
+
 import requests
 from bs4 import BeautifulSoup
 
 import settings
+from model.LandInfo import LandInfo
 from SQLWrapper import SQLWrapper
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 class BasicSpider:
@@ -13,6 +18,7 @@ class BasicSpider:
         self.step = step
 
     def get_html_beautiful_soup_with_cookies(self, url, cookies):
+        url = settings.host_url + url
         try:
             base_session = requests.session()
             base_session.keep_alive = False
@@ -38,7 +44,7 @@ class BasicSpider:
     def get_cookies(self):
         cookies = {}
         for line in self.cookies.split(';'):
-            key, value = line.split('=',1)
+            key, value = line.split('=', 1)
             cookies[key] = value
         return cookies
 
@@ -54,7 +60,7 @@ class BasicSpider:
             print url.string
         return url_list
 
-    def deal_url(self,url):
+    def deal_url(self, url):
         base_soup = self.get_html_beautiful_soup_without_cookies(url)
         url_list = self.parser_url(base_soup)
 
@@ -64,13 +70,13 @@ class BasicSpider:
         return url_list
 
     # 获取所有省的URL,for example: 江苏
-    def get_province_url_list(self,soup):
+    def get_province_url_list(self, soup):
         span = soup.find('span', class_='w866 fr')
         if span is not None:
             url_list = span.find_all('a')
             url_list = self.pop_unlimited_url(url_list)
-            #如果地区信息已经存在,则将它从要插入的URL list中删除
-            for i in range(len(url_list)-1,-1,-1):
+            #如果地区信息已经存在,则将它从要插入的URL list中删除#
+            for i in range(len(url_list)-1, -1, -1):
                 print i
                 url = url_list[i]
                 is_exist = self.check_region_info_exist_or_not_by_url(url['href'])
@@ -118,7 +124,7 @@ class BasicSpider:
         return
 
     def get_land_url_list_by_distrct_url(self, soup, land_url):
-        split=u'_______'
+        split = u'_______'
         #获取土地 url list的页数
         land = soup.find('div',class_='top_page fr')
         land_url_list = []
@@ -135,7 +141,7 @@ class BasicSpider:
             if num == 34:
                 print '34'
                 #如果 num == 34, 通过规划用途(例如:住宅用地等)获取相关土地信息
-                for i in range(0,4):
+                for i in range(0, 4):
                     tudi_zl_url = deal_url+u"_"+"%d"%(i+1)+u"______"+deal_split_url
                     print tudi_zl_url
                     base_soup = self.get_html_beautiful_soup_without_cookies(tudi_zl_url)
@@ -145,37 +151,43 @@ class BasicSpider:
                     tudi_url = deal_url+split+u"1_0_"+"%d"%(i+1)+u".html"
                     print tudi_url
                     land_url_list.append(tudi_url)
-        return  land_url_list
+        return land_url_list
 
-    def get_land_basic_info_by_land_info_url(self,soup,district_row_id = -1):
-        land_info_list = soup.findAll('div', class_ ='list28_text fl')
+    def get_land_basic_info_by_land_info_url(self, soup, district_row_id=-1):
+        land_info_list = soup.findAll('div', class_='list28_text fl')
         for land_basic_info in land_info_list:
             land_info_detailed_url = land_basic_info.find('h3').a['href']
-            date =land_basic_info.find('td', attrs={'width':'100'}).text
+            date =land_basic_info.find('td', attrs={'width': '100'}).text
             print land_info_detailed_url
+            print len(land_info_detailed_url)
             print date
-            self.insert_land_url_list(land_info_detailed_url,date, district_row_id)
+            print district_row_id
+            # self.insert_land_url_list(land_info_detailed_url, date, district_row_id)
+            land_info = LandInfo(land_info_detailed_url, district_row_id)
+            if land_info.is_exist() is None:
+                land_info.save_land_info()
 
-    def get_tudi_detailed_info(self,tudi_url = u'/market/0d904781-b587-4c19-9185-0eebb9456854.html',title=u''):
-        url = settings.host_url + tudi_url
-        base_soup = self.get_html_beautiful_soup_with_cookies(url)
-        bianhao = base_soup.find('div',class_='menubox01 mt20')
+
+    def get_tudi_detailed_info(self, soup,title=u''):
+
+        bianhao = soup.find('div', class_='menubox01 mt20')
         if bianhao is not None:
-            dikuai_bianhao = bianhao.find('span',class_='gray2').string.split('：')[1]
+            dikuai_bianhao = bianhao.find('span', class_='gray2').string.split('：')[1]
         else:
             dikuai_bianhao =''
-        #print  dikuai_bianhao.string.split('：')[1]
-        table_list = base_soup.find_all('table',class_='tablebox02 mt10')
+        #print dikuai_bianhao.string.split('：')[1]
+        print dikuai_bianhao
+        table_list = soup.find_all('table', class_='tablebox02 mt10')
         td_list = table_list[0].find_all('td')
-        for i in range(0,len(td_list)) :
+        for i in range(0, len(td_list)):
             print td_list[i].text.split('：')[1]
         td_list_sec = table_list[1].find_all('td')
 
 
 
     def validate_url_list_is_exist(self,url_list):
-        if url_list is not None and len(url_list) > 0 :
-             #如果地区信息已经存在,则将它从要插入的URL list中删除
+        if url_list is not None and len(url_list) > 0:
+             # 如果地区信息已经存在,则将它从要插入的URL list中删除
             for i in range(len(url_list)-1,-1,-1):
                 print i
                 url = url_list[i]
@@ -186,11 +198,12 @@ class BasicSpider:
         return url_list
 
     # 将所获得地区信息插入到表格中
-    def insert_region_url_list(self,url_list,parent_row_id=-1):
+    def insert_region_url_list(self, url_list, parent_row_id=-1):
         sqlWrapper = SQLWrapper()
         conn = sqlWrapper.get_conn()
         command = 'insert into SFS_region_info(region_url,region_name,parent_row_id) values(%s,%s,%s)'
         for url in url_list:
+            print url.string
             data = (url['href'], url.string, parent_row_id)
             sqlWrapper.excute_statement(command, data, conn)
         sqlWrapper.conn_commit(conn)
@@ -198,7 +211,7 @@ class BasicSpider:
         self.step = settings.parser_steps['Insert_Privince_Level_URL']
         return
 
-    def insert_land_url_list(self,url,date,distric_row_id =-1):
+    def insert_land_url_list(self, url, date, distric_row_id=-1):
         sqlWrapper = SQLWrapper()
         conn = sqlWrapper.get_conn()
         command = 'insert into SFS_land_basic_info(land_url,land_date,district_row_id) values(%s,%s,%s)'
@@ -207,7 +220,6 @@ class BasicSpider:
         sqlWrapper.conn_commit(conn)
         sqlWrapper.conn_close(conn)
         return
-
 
     def check_region_info_exist_or_not_by_url(self, url):
         region_info = self.search_region_info_by_url(url)
